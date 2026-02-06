@@ -1,0 +1,234 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: system-ui, sans-serif;
+}
+
+body {
+  background: #0f172a;
+  color: #e5e7eb;
+}
+
+/* ================= HERO ================= */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 2rem;
+}
+
+.hero h1 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.hero p {
+  max-width: 500px;
+  color: #94a3b8;
+  margin-bottom: 2rem;
+}
+
+.hero button {
+  padding: 12px 24px;
+  font-size: 1rem;
+  background: #6366f1;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.hero button:hover {
+  background: #4f46e5;
+}
+
+/* ================= FEATURES ================= */
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+  padding: 3rem;
+}
+
+.card {
+  background: #020617;
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.card h3 {
+  margin-bottom: 0.5rem;
+}
+
+.card p {
+  color: #94a3b8;
+}
+
+/* ================= DASHBOARD ================= */
+.dashboard {
+  background: #0f172a;
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+.topbar {
+  margin-bottom: 2rem;
+}
+
+.topbar p {
+  color: #94a3b8;
+}
+
+/* ================= STATS ================= */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: #020617;
+  padding: 1.5rem;
+  border-radius: 12px;
+}
+
+.stat-card span {
+  font-size: 1.8rem;
+  font-weight: bold;
+}
+
+/* ================= GOALS ================= */
+.goals {
+  background: #020617;
+  padding: 1.5rem;
+  border-radius: 12px;
+}
+
+.goals-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.goals-header button {
+  background: #6366f1;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+}
+
+/* ================= GOAL CARD ================= */
+.goal-card {
+  background: #0f172a;
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 0.8rem;
+}
+
+/* clickable header */
+.goal-header {
+  cursor: pointer;
+}
+
+.goal-header h4 {
+  margin-bottom: 4px;
+}
+
+.goal-card p {
+  color: #94a3b8;
+}
+
+/* ================= ACTIONS ================= */
+.actions {
+  margin-top: 6px;
+}
+
+.actions button {
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  margin-right: 6px;
+  cursor: pointer;
+}
+
+.actions .yes {
+  background: #16a34a;
+  color: white;
+}
+
+.actions .no {
+  background: #dc2626;
+  color: white;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* =================================================
+   🔥 NEW FEATURE: MONTHLY CALENDAR (ADDED ONLY)
+   ================================================= */
+
+/* calendar container */
+.calendar {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #1e293b;
+
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+}
+
+/* hidden by default */
+.hidden {
+  display: none;
+}
+
+/* day box */
+.day-box {
+  width: 40%;
+  padding-top: 40%;
+  padding-right: 40%;
+  position: relative;
+  border-radius: 1px;
+  background: #020617;
+  border: 4px solid #1e293b;
+}
+
+/* YES = green */
+.day-box.yes {
+  background: #16a34a;
+}
+
+/* NO = red */
+.day-box.no {
+  background: #dc2626;
+}
+
+/* day number */
+.day-box span {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 20px;
+  font-weight: 500;
+  color: #e5e7eb;
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 600px) {
+  .calendar {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}

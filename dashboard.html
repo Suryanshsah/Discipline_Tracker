@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dashboard – Discipline Tracker</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="dashboard">
+
+  <header class="topbar">
+    <h2>Welcome back 👋</h2>
+    <p>Stay consistent. One day at a time.</p>
+  </header>
+
+  <!-- STATS -->
+  <section class="stats">
+    <div class="stat-card">
+      <h3>Active Goals</h3>
+      <span id="activeGoals">0</span>
+    </div>
+    <div class="stat-card">
+      <h3>Current Streak</h3>
+      <span id="currentStreak">0 🔥</span>
+    </div>
+  </section>
+
+  <!-- GOALS -->
+  <section class="goals">
+    <div class="goals-header">
+      <h3>Your 30-Day Commitment</h3>
+      <button id="addGoalBtn">+ New Goal</button>
+    </div>
+
+    <div id="goalsList"></div>
+  </section>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBWk13_T9H-PUXVj-LtS3MQrypT-e3sOV4",
+      authDomain: "discipline-tracker-1a7ae.firebaseapp.com",
+      projectId: "discipline-tracker-1a7ae",
+      storageBucket: "discipline-tracker-1a7ae.appspot.com",
+      messagingSenderId: "34672064247",
+      appId: "1:34672064247:web:62abc1e0ebd27536e4c5f2"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
+
+  <script src="script.js"></script>
+</body>
+</html>
