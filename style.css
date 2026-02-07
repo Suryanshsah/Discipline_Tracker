@@ -10,7 +10,6 @@ body {
   color: #e5e7eb;
 }
 
-/* ================= HERO ================= */
 .hero {
   min-height: 100vh;
   display: flex;
@@ -46,7 +45,6 @@ body {
   background: #4f46e5;
 }
 
-/* ================= FEATURES ================= */
 .features {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -68,7 +66,6 @@ body {
   color: #94a3b8;
 }
 
-/* ================= DASHBOARD ================= */
 .dashboard {
   background: #0f172a;
   min-height: 100vh;
@@ -83,7 +80,6 @@ body {
   color: #94a3b8;
 }
 
-/* ================= STATS ================= */
 .stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -102,7 +98,6 @@ body {
   font-weight: bold;
 }
 
-/* ================= GOALS ================= */
 .goals {
   background: #020617;
   padding: 1.5rem;
@@ -125,7 +120,6 @@ body {
   cursor: pointer;
 }
 
-/* ================= GOAL CARD ================= */
 .goal-card {
   background: #0f172a;
   border-radius: 10px;
@@ -133,7 +127,6 @@ body {
   margin-bottom: 0.8rem;
 }
 
-/* clickable header */
 .goal-header {
   cursor: pointer;
 }
@@ -146,7 +139,6 @@ body {
   color: #94a3b8;
 }
 
-/* ================= ACTIONS ================= */
 .actions {
   margin-top: 6px;
 }
@@ -174,11 +166,6 @@ button:disabled {
   cursor: not-allowed;
 }
 
-/* =================================================
-   🔥 NEW FEATURE: MONTHLY CALENDAR (ADDED ONLY)
-   ================================================= */
-
-/* calendar container */
 .calendar {
   margin-top: 12px;
   padding-top: 10px;
@@ -189,12 +176,11 @@ button:disabled {
   gap: 1px;
 }
 
-/* hidden by default */
 .hidden {
   display: none;
 }
 
-/* day box */
+
 .day-box {
   width: 40%;
   padding-top: 40%;
@@ -205,17 +191,17 @@ button:disabled {
   border: 4px solid #1e293b;
 }
 
-/* YES = green */
+
 .day-box.yes {
   background: #16a34a;
 }
 
-/* NO = red */
+
 .day-box.no {
   background: #dc2626;
 }
 
-/* day number */
+
 .day-box span {
   position: absolute;
   top: 50%;
@@ -226,7 +212,6 @@ button:disabled {
   color: #e5e7eb;
 }
 
-/* ================= RESPONSIVE ================= */
 @media (max-width: 600px) {
   .calendar {
     grid-template-columns: repeat(5, 1fr);

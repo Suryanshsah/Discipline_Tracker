@@ -2,7 +2,7 @@ console.log("Dashboard loaded");
 
 const USER_ID = "testUser";
 
-/* ===================== DATE HELPERS ===================== */
+
 function getToday() {
   const d = new Date();
   const y = d.getFullYear();
@@ -25,7 +25,6 @@ function getDaysInCurrentMonth() {
   return new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
 }
 
-/* ===================== LOAD STREAK ===================== */
 async function loadStreak() {
   const el = document.getElementById("currentStreak");
   if (!el) return;
@@ -34,7 +33,6 @@ async function loadStreak() {
   el.innerText = `${doc.exists ? doc.data().streak || 0 : 0} 🔥`;
 }
 
-/* ===================== TODAY STATUS (YES / NO / NULL) ===================== */
 async function getTodayStatus(goalId) {
   const today = getToday();
 
@@ -50,7 +48,6 @@ async function getTodayStatus(goalId) {
   return snap.docs[0].data().status;
 }
 
-/* ===================== ADD GOAL ===================== */
 document.getElementById("addGoalBtn")?.addEventListener("click", async () => {
   const title = prompt("Enter your goal");
   if (!title) return;
@@ -65,7 +62,6 @@ document.getElementById("addGoalBtn")?.addEventListener("click", async () => {
   loadGoals();
 });
 
-/* ===================== RENDER MONTHLY CALENDAR ===================== */
 async function renderCalendar(goalId, container) {
   container.innerHTML = "";
 
@@ -101,7 +97,6 @@ async function renderCalendar(goalId, container) {
   }
 }
 
-/* ===================== LOAD GOALS ===================== */
 async function loadGoals() {
   const list = document.getElementById("goalsList");
   const countEl = document.getElementById("activeGoals");
@@ -142,7 +137,6 @@ async function loadGoals() {
     yesBtn.onclick = () => saveCheckin(goalId, "yes", yesBtn, noBtn);
     noBtn.onclick = () => saveCheckin(goalId, "no", yesBtn, noBtn);
 
-    // restore today's state
     const todayStatus = await getTodayStatus(goalId);
     if (todayStatus) {
       yesBtn.disabled = true;
@@ -157,7 +151,6 @@ async function loadGoals() {
       }
     }
 
-    // expand / collapse calendar
     header.onclick = async () => {
       calendar.classList.toggle("hidden");
       if (!calendar.classList.contains("hidden")) {
@@ -171,7 +164,6 @@ async function loadGoals() {
   countEl.innerText = count;
 }
 
-/* ===================== SAVE CHECKIN (FORGIVING STREAK) ===================== */
 async function saveCheckin(goalId, status, yesBtn, noBtn) {
   const today = getToday();
   const yesterday = getYesterday();
@@ -193,7 +185,6 @@ async function saveCheckin(goalId, status, yesBtn, noBtn) {
     let streak = userDoc.exists ? userDoc.data().streak || 0 : 0;
     let lastDate = userDoc.exists ? userDoc.data().lastCheckinDate || "" : "";
 
-    // forgiving rule: at least one YES today
     const yesTodaySnap = await db
       .collection("checkins")
       .where("userId", "==", USER_ID)
@@ -205,7 +196,7 @@ async function saveCheckin(goalId, status, yesBtn, noBtn) {
 
     if (hasAnyYesToday) {
       if (lastDate === today) {
-        // already counted
+  
       } else if (lastDate === yesterday) {
         streak += 1;
       } else {
@@ -240,6 +231,13 @@ async function saveCheckin(goalId, status, yesBtn, noBtn) {
   }
 }
 
-/* ===================== INIT ===================== */
 loadGoals();
 loadStreak();
+const startBtn = document.getElementById("startBtn");
+
+if (startBtn) {
+  startBtn.addEventListener("click", () => {
+    window.location.href = "dashboard.html";
+  });
+}
+
