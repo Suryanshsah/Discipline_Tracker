@@ -2,43 +2,77 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Dashboard – Discipline Tracker</title>
+  <title>Discipline Dashboard</title>
   <link rel="stylesheet" href="style.css" />
 </head>
-<body class="dashboard">
+<body>
 
-  <header class="topbar">
-    <h2>Welcome back 👋</h2>
-    <p>Stay consistent. One day at a time.</p>
-  </header>
 
-  <!-- STATS -->
-  <section class="stats">
-    <div class="stat-card">
-      <h3>Active Goals</h3>
-      <span id="activeGoals">0</span>
+<div class="top-nav">
+  <div class="welcome-text" id="welcomeText"></div>
+
+
+  <div class="profile-menu">
+    <span class="profile-name">Profile ▾</span>
+    <div class="profile-dropdown hidden">
+      <div>Settings</div>
+      <div>Logout</div>
     </div>
-    <div class="stat-card">
-      <h3>Current Streak</h3>
-      <span id="currentStreak">0 🔥</span>
-    </div>
-  </section>
+  </div>
+</div>
 
-  <!-- GOALS -->
-  <section class="goals">
+<div class="dashboard">
+
+  <div class="topbar">
+    <h2>Dashboard</h2>
+    <p>Track consistency, not perfection.</p>
+  </div>
+
+
+  <div class="stats">
+    <div class="stat-card">
+      <p>Active Goals</p>
+      <span id="statActiveGoals">0</span>
+    </div>
+
+    <div class="stat-card clickable" id="daysCompletedCard">
+      <p>Days Completed</p>
+      <span id="statDaysCompleted">0</span>
+    </div>
+
+    <div class="stat-card">
+      <p>Best Streak</p>
+      <span id="statBestStreak">0</span>
+    </div>
+
+    <div class="stat-card">
+      <p>Completion Rate</p>
+      <span id="statCompletionRate">0%</span>
+    </div>
+  </div>
+
+
+  <div class="global-calendar-section hidden" id="globalCalendarSection">
+    <h3>Monthly Discipline</h3>
+    <div id="globalCalendar" class="global-calendar"></div>
+  </div>
+
+
+  <div class="goals">
     <div class="goals-header">
-      <h3>Your 30-Day Commitment</h3>
-      <button id="addGoalBtn">+ New Goal</button>
+      <h3>Your Goals</h3>
+      <button id="addGoalBtn">Add Goal</button>
     </div>
-
     <div id="goalsList"></div>
-  </section>
+  </div>
 
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+</div>
 
-  <script>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
     const firebaseConfig = {
       apiKey: "AIzaSyBWk13_T9H-PUXVj-LtS3MQrypT-e3sOV4",
       authDomain: "discipline-tracker-1a7ae.firebaseapp.com",
@@ -52,6 +86,9 @@
     const db = firebase.firestore();
   </script>
 
-  <script src="script.js"></script>
+
+<script src="script.js"></script>
 </body>
+
+
 </html>

@@ -1,243 +1,277 @@
-console.log("Dashboard loaded");
-
 const USER_ID = "testUser";
 
 
 function getToday() {
+  return new Date().toISOString().split("T")[0];
+}
+
+function getMonthInfo() {
   const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const days = new Date(year, d.getMonth() + 1, 0).getDate();
+  return { year, month, days };
 }
 
-function getYesterday() {
-  const d = new Date();
-  d.setDate(d.getDate() - 1);
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
 
-function getDaysInCurrentMonth() {
-  const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-}
-
-async function loadStreak() {
-  const el = document.getElementById("currentStreak");
-  if (!el) return;
-
-  const doc = await db.collection("users").doc(USER_ID).get();
-  el.innerText = `${doc.exists ? doc.data().streak || 0 : 0} 🔥`;
-}
-
-async function getTodayStatus(goalId) {
-  const today = getToday();
-
-  const snap = await db
-    .collection("checkins")
-    .where("goalId", "==", goalId)
-    .where("userId", "==", USER_ID)
-    .where("date", "==", today)
-    .limit(1)
-    .get();
-
-  if (snap.empty) return null;
-  return snap.docs[0].data().status;
-}
-
-document.getElementById("addGoalBtn")?.addEventListener("click", async () => {
-  const title = prompt("Enter your goal");
+document.getElementById("addGoalBtn").onclick = async () => {
+  const title = prompt("Enter goal");
   if (!title) return;
 
   await db.collection("goals").add({
     title,
     userId: USER_ID,
-    startDate: new Date(),
     isActive: true
   });
 
-  loadGoals();
-});
+  loadAll();
+};
 
-async function renderCalendar(goalId, container) {
-  container.innerHTML = "";
 
-  const daysInMonth = getDaysInCurrentMonth();
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-
-  const snap = await db
-    .collection("checkins")
+async function getTodayStatus(goalId) {
+  const snap = await db.collection("checkins")
     .where("goalId", "==", goalId)
     .where("userId", "==", USER_ID)
+    .where("date", "==", getToday())
+    .limit(1)
     .get();
 
-  const map = {};
-  snap.forEach(doc => {
-    const { date, status } = doc.data();
-    map[date] = status;
+  return snap.empty ? null : snap.docs[0].data().status;
+}
+
+
+async function saveCheckin(goalId, status) {
+  const today = getToday();
+
+  const snap = await db.collection("checkins")
+    .where("goalId", "==", goalId)
+    .where("userId", "==", USER_ID)
+    .where("date", "==", today)
+    .get();
+
+  
+  if (!snap.empty) return;
+
+  await db.collection("checkins").add({
+    goalId,
+    userId: USER_ID,
+    date: today,
+    status
   });
 
-  for (let day = 1; day <= daysInMonth; day++) {
-    const d = String(day).padStart(2, "0");
-    const key = `${year}-${month}-${d}`;
-
-    const box = document.createElement("div");
-    box.className = "day-box";
-
-    if (map[key] === "yes") box.classList.add("yes");
-    if (map[key] === "no") box.classList.add("no");
-
-    box.innerHTML = `<span>${day}</span>`;
-    container.appendChild(box);
-  }
+  loadAll();
 }
+
+
+
+async function calculateProgress(goalId) {
+  const { year, month, days } = getMonthInfo();
+
+  const snap = await db.collection("checkins")
+    .where("goalId", "==", goalId)
+    .where("userId", "==", USER_ID)
+    .where("status", "==", "yes")
+    .get();
+
+  let yes = 0;
+  snap.forEach(d => {
+    if (d.data().date.startsWith(`${year}-${month}`)) yes++;
+  });
+
+  return Math.round((yes / days) * 100);
+}
+
 
 async function loadGoals() {
   const list = document.getElementById("goalsList");
-  const countEl = document.getElementById("activeGoals");
   list.innerHTML = "";
 
-  let count = 0;
-
-  const snap = await db
-    .collection("goals")
+  const goals = await db.collection("goals")
     .where("userId", "==", USER_ID)
     .where("isActive", "==", true)
     .get();
 
-  for (const doc of snap.docs) {
-    count++;
+  for (const doc of goals.docs) {
     const goalId = doc.id;
-    const goal = doc.data();
+    const progress = await calculateProgress(goalId);
+    const status = await getTodayStatus(goalId);
 
     const card = document.createElement("div");
     card.className = "goal-card";
 
-    card.innerHTML = `
-      <div class="goal-header">
-        <h4>${goal.title}</h4>
-      </div>
-      <div class="actions">
+    let actionHTML = `
+      <div class="action-area">
         <button class="yes">✔</button>
         <button class="no">✖</button>
       </div>
-      <div class="calendar hidden"></div>
     `;
 
-    const yesBtn = card.querySelector(".yes");
-    const noBtn = card.querySelector(".no");
-    const calendar = card.querySelector(".calendar");
-    const header = card.querySelector(".goal-header");
-
-    yesBtn.onclick = () => saveCheckin(goalId, "yes", yesBtn, noBtn);
-    noBtn.onclick = () => saveCheckin(goalId, "no", yesBtn, noBtn);
-
-    const todayStatus = await getTodayStatus(goalId);
-    if (todayStatus) {
-      yesBtn.disabled = true;
-      noBtn.disabled = true;
-
-      if (todayStatus === "yes") {
-        yesBtn.innerText = "Done ✔";
-        noBtn.innerText = "—";
-      } else {
-        noBtn.innerText = "Not Done ✖";
-        yesBtn.innerText = "—";
-      }
+    if (status === "yes") {
+      actionHTML = `
+        <div class="status-badge done">
+          Done ✔ <span class="change">✖</span>
+        </div>
+      `;
     }
 
-    header.onclick = async () => {
-      calendar.classList.toggle("hidden");
-      if (!calendar.classList.contains("hidden")) {
-        await renderCalendar(goalId, calendar);
-      }
-    };
+    if (status === "no") {
+      actionHTML = `
+        <div class="status-badge not-done">
+          Not Done ✖ <span class="change">✔</span>
+        </div>
+      `;
+    }
+
+    card.innerHTML = `
+      <h4>${doc.data().title}</h4>
+
+      <div class="progress-wrapper">
+        <div class="progress-bar">
+          <div class="progress-fill" style="width:${progress}%"></div>
+        </div>
+        <span class="progress-text">${progress}%</span>
+      </div>
+
+      ${actionHTML}
+    `;
 
     list.appendChild(card);
-  }
 
-  countEl.innerText = count;
-}
-
-async function saveCheckin(goalId, status, yesBtn, noBtn) {
-  const today = getToday();
-  const yesterday = getYesterday();
-
-  yesBtn.disabled = true;
-  noBtn.disabled = true;
-
-  try {
-    await db.collection("checkins").add({
-      goalId,
-      userId: USER_ID,
-      date: today,
-      status
-    });
-
-    const userRef = db.collection("users").doc(USER_ID);
-    const userDoc = await userRef.get();
-
-    let streak = userDoc.exists ? userDoc.data().streak || 0 : 0;
-    let lastDate = userDoc.exists ? userDoc.data().lastCheckinDate || "" : "";
-
-    const yesTodaySnap = await db
-      .collection("checkins")
-      .where("userId", "==", USER_ID)
-      .where("date", "==", today)
-      .where("status", "==", "yes")
-      .get();
-
-    const hasAnyYesToday = !yesTodaySnap.empty;
-
-    if (hasAnyYesToday) {
-      if (lastDate === today) {
-  
-      } else if (lastDate === yesterday) {
-        streak += 1;
-      } else {
-        streak = 1;
-      }
+    if (!status) {
+      card.querySelector(".yes").onclick = () => saveCheckin(goalId, "yes");
+      card.querySelector(".no").onclick = () => saveCheckin(goalId, "no");
     } else {
-      streak = 0;
+      card.querySelector(".change").onclick =
+        () => saveCheckin(goalId, status === "yes" ? "no" : "yes");
     }
-
-    await userRef.set(
-      {
-        streak,
-        lastCheckinDate: today
-      },
-      { merge: true }
-    );
-
-    document.getElementById("currentStreak").innerText = `${streak} 🔥`;
-
-    if (status === "yes") {
-      yesBtn.innerText = "Done ✔";
-      noBtn.innerText = "—";
-    } else {
-      noBtn.innerText = "Not Done ✖";
-      yesBtn.innerText = "—";
-    }
-
-  } catch (err) {
-    console.error(err);
-    yesBtn.disabled = false;
-    noBtn.disabled = false;
   }
 }
 
-loadGoals();
-loadStreak();
-const startBtn = document.getElementById("startBtn");
 
-if (startBtn) {
-  startBtn.addEventListener("click", () => {
-    window.location.href = "dashboard.html";
+async function loadGlobalCalendar() {
+  const box = document.getElementById("globalCalendar");
+  box.innerHTML = "";
+
+  const { year, month, days } = getMonthInfo();
+
+  const goals = await db.collection("goals")
+    .where("userId", "==", USER_ID)
+    .where("isActive", "==", true)
+    .get();
+
+  const totalGoals = goals.size;
+  if (!totalGoals) return;
+
+  const checkins = await db.collection("checkins")
+    .where("userId", "==", USER_ID)
+    .get();
+
+  const map = {};
+  checkins.forEach(d => {
+    const { date, status } = d.data();
+    if (status === "yes" && date.startsWith(`${year}-${month}`)) {
+      map[date] = (map[date] || 0) + 1;
+    }
   });
+
+  for (let i = 1; i <= days; i++) {
+    const d = String(i).padStart(2, "0");
+    const key = `${year}-${month}-${d}`;
+    const yes = map[key] || 0;
+    const percent = (yes / totalGoals) * 100;
+
+    const el = document.createElement("div");
+    el.className = "global-day";
+
+    if (yes === 0) el.classList.add("empty");
+    else if (percent >= 80) el.classList.add("g80");
+    else if (percent >= 50) el.classList.add("g50");
+    else if (percent >= 30) el.classList.add("g30");
+    else el.classList.add("g0");
+
+    box.appendChild(el);
+  }
+}
+
+
+async function loadStats() {
+  const { year, month, days } = getMonthInfo();
+
+  const goals = await db.collection("goals")
+    .where("userId", "==", USER_ID)
+    .where("isActive", "==", true)
+    .get();
+
+  document.getElementById("statActiveGoals").innerText = goals.size;
+
+  const checkins = await db.collection("checkins")
+    .where("userId", "==", USER_ID)
+    .get();
+
+  const daySet = new Set();
+  let yes = 0;
+
+  checkins.forEach(d => {
+    const data = d.data();
+    if (data.date.startsWith(`${year}-${month}`) && data.status === "yes") {
+      yes++;
+      daySet.add(data.date);
+    }
+  });
+
+  document.getElementById("statDaysCompleted").innerText = daySet.size;
+  document.getElementById("statCompletionRate").innerText =
+    `${Math.round((yes / (goals.size * days)) * 100) || 0}%`;
+
+  
+  const dates = [...daySet].sort();
+  let best = 0, cur = 0;
+  for (let i = 0; i < dates.length; i++) {
+    if (i === 0) cur = 1;
+    else {
+      const diff =
+        (new Date(dates[i]) - new Date(dates[i - 1])) /
+        (1000 * 60 * 60 * 24);
+      cur = diff === 1 ? cur + 1 : 1;
+    }
+    best = Math.max(best, cur);
+  }
+  document.getElementById("statBestStreak").innerText = best;
+}
+
+
+document.getElementById("daysCompletedCard").onclick = () => {
+  document.getElementById("globalCalendarSection")
+    .classList.toggle("hidden");
+};
+
+
+async function loadAll() {
+  await loadGoals();
+  await loadGlobalCalendar();
+  await loadStats();
+}
+
+
+const profileName = document.querySelector(".profile-name");
+const profileDropdown = document.querySelector(".profile-dropdown");
+
+if (profileName) {
+  profileName.addEventListener("click", () => {
+    profileDropdown.classList.toggle("hidden");
+  });
+}
+
+
+document.addEventListener("click", (e) => {
+  if (!e.target.closest(".profile-menu")) {
+    profileDropdown?.classList.add("hidden");
+  }
+});
+
+const username = localStorage.getItem("username") || "Friend";
+const welcomeEl = document.getElementById("welcomeText");
+if (welcomeEl) {
+  welcomeEl.innerText = `Welcome back, ${username} 👋`;
 }
 
