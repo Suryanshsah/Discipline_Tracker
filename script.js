@@ -1,5 +1,6 @@
-const USER_ID = "testUser";
+console.log("Dashboard script loaded");
 
+const USER_ID = "testUser";
 
 function getToday() {
   return new Date().toISOString().split("T")[0];
@@ -13,23 +14,27 @@ function getMonthInfo() {
   return { year, month, days };
 }
 
+const addGoalBtn = document.getElementById("addGoalBtn");
 
-document.getElementById("addGoalBtn").onclick = async () => {
-  const title = prompt("Enter goal");
-  if (!title) return;
+if (addGoalBtn) {
+  addGoalBtn.onclick = async () => {
+    const title = prompt("Enter your goal");
+    if (!title) return;
 
-  await db.collection("goals").add({
-    title,
-    userId: USER_ID,
-    isActive: true
-  });
+    await db.collection("goals").add({
+      title,
+      userId: USER_ID,
+      isActive: true,
+      createdAt: new Date()
+    });
 
-  loadAll();
-};
-
+    loadAll();
+  };
+}
 
 async function getTodayStatus(goalId) {
-  const snap = await db.collection("checkins")
+  const snap = await db
+    .collection("checkins")
     .where("goalId", "==", goalId)
     .where("userId", "==", USER_ID)
     .where("date", "==", getToday())
@@ -39,17 +44,16 @@ async function getTodayStatus(goalId) {
   return snap.empty ? null : snap.docs[0].data().status;
 }
 
-
 async function saveCheckin(goalId, status) {
   const today = getToday();
 
-  const snap = await db.collection("checkins")
+  const snap = await db
+    .collection("checkins")
     .where("goalId", "==", goalId)
     .where("userId", "==", USER_ID)
     .where("date", "==", today)
     .get();
 
-  
   if (!snap.empty) return;
 
   await db.collection("checkins").add({
@@ -62,12 +66,11 @@ async function saveCheckin(goalId, status) {
   loadAll();
 }
 
-
-
 async function calculateProgress(goalId) {
   const { year, month, days } = getMonthInfo();
 
-  const snap = await db.collection("checkins")
+  const snap = await db
+    .collection("checkins")
     .where("goalId", "==", goalId)
     .where("userId", "==", USER_ID)
     .where("status", "==", "yes")
@@ -81,23 +84,23 @@ async function calculateProgress(goalId) {
   return Math.round((yes / days) * 100);
 }
 
-
 async function loadGoals() {
   const list = document.getElementById("goalsList");
+  if (!list) return;
+
   list.innerHTML = "";
 
-  const goals = await db.collection("goals")
+  const snap = await db
+    .collection("goals")
     .where("userId", "==", USER_ID)
     .where("isActive", "==", true)
     .get();
 
-  for (const doc of goals.docs) {
+  for (const doc of snap.docs) {
     const goalId = doc.id;
+    const goal = doc.data();
     const progress = await calculateProgress(goalId);
     const status = await getTodayStatus(goalId);
-
-    const card = document.createElement("div");
-    card.className = "goal-card";
 
     let actionHTML = `
       <div class="action-area">
@@ -107,31 +110,23 @@ async function loadGoals() {
     `;
 
     if (status === "yes") {
-      actionHTML = `
-        <div class="status-badge done">
-          Done ✔ <span class="change">✖</span>
-        </div>
-      `;
+      actionHTML = `<div class="status-badge done">Done ✔</div>`;
     }
 
     if (status === "no") {
-      actionHTML = `
-        <div class="status-badge not-done">
-          Not Done ✖ <span class="change">✔</span>
-        </div>
-      `;
+      actionHTML = `<div class="status-badge not-done">Not Done ✖</div>`;
     }
 
+    const card = document.createElement("div");
+    card.className = "goal-card";
     card.innerHTML = `
-      <h4>${doc.data().title}</h4>
-
+      <h4>${goal.title}</h4>
       <div class="progress-wrapper">
         <div class="progress-bar">
           <div class="progress-fill" style="width:${progress}%"></div>
         </div>
         <span class="progress-text">${progress}%</span>
       </div>
-
       ${actionHTML}
     `;
 
@@ -140,34 +135,35 @@ async function loadGoals() {
     if (!status) {
       card.querySelector(".yes").onclick = () => saveCheckin(goalId, "yes");
       card.querySelector(".no").onclick = () => saveCheckin(goalId, "no");
-    } else {
-      card.querySelector(".change").onclick =
-        () => saveCheckin(goalId, status === "yes" ? "no" : "yes");
     }
   }
 }
 
-
 async function loadGlobalCalendar() {
   const box = document.getElementById("globalCalendar");
+  if (!box) return;
+
   box.innerHTML = "";
 
   const { year, month, days } = getMonthInfo();
 
-  const goals = await db.collection("goals")
+  const goalsSnap = await db
+    .collection("goals")
     .where("userId", "==", USER_ID)
     .where("isActive", "==", true)
     .get();
 
-  const totalGoals = goals.size;
+  const totalGoals = goalsSnap.size;
   if (!totalGoals) return;
 
-  const checkins = await db.collection("checkins")
+  const checkinsSnap = await db
+    .collection("checkins")
     .where("userId", "==", USER_ID)
     .get();
 
   const map = {};
-  checkins.forEach(d => {
+
+  checkinsSnap.forEach(d => {
     const { date, status } = d.data();
     if (status === "yes" && date.startsWith(`${year}-${month}`)) {
       map[date] = (map[date] || 0) + 1;
@@ -175,8 +171,8 @@ async function loadGlobalCalendar() {
   });
 
   for (let i = 1; i <= days; i++) {
-    const d = String(i).padStart(2, "0");
-    const key = `${year}-${month}-${d}`;
+    const day = String(i).padStart(2, "0");
+    const key = `${year}-${month}-${day}`;
     const yes = map[key] || 0;
     const percent = (yes / totalGoals) * 100;
 
@@ -193,39 +189,41 @@ async function loadGlobalCalendar() {
   }
 }
 
-
 async function loadStats() {
   const { year, month, days } = getMonthInfo();
 
-  const goals = await db.collection("goals")
+  const goalsSnap = await db
+    .collection("goals")
     .where("userId", "==", USER_ID)
     .where("isActive", "==", true)
     .get();
 
-  document.getElementById("statActiveGoals").innerText = goals.size;
+  document.getElementById("statActiveGoals").innerText = goalsSnap.size;
 
-  const checkins = await db.collection("checkins")
+  const checkinsSnap = await db
+    .collection("checkins")
     .where("userId", "==", USER_ID)
     .get();
 
   const daySet = new Set();
   let yes = 0;
 
-  checkins.forEach(d => {
+  checkinsSnap.forEach(d => {
     const data = d.data();
-    if (data.date.startsWith(`${year}-${month}`) && data.status === "yes") {
+    if (data.status === "yes" && data.date.startsWith(`${year}-${month}`)) {
       yes++;
       daySet.add(data.date);
     }
   });
 
   document.getElementById("statDaysCompleted").innerText = daySet.size;
-  document.getElementById("statCompletionRate").innerText =
-    `${Math.round((yes / (goals.size * days)) * 100) || 0}%`;
 
-  
+  const rate = Math.round((yes / (goalsSnap.size * days)) * 100) || 0;
+  document.getElementById("statCompletionRate").innerText = `${rate}%`;
+
   const dates = [...daySet].sort();
   let best = 0, cur = 0;
+
   for (let i = 0; i < dates.length; i++) {
     if (i === 0) cur = 1;
     else {
@@ -236,15 +234,9 @@ async function loadStats() {
     }
     best = Math.max(best, cur);
   }
+
   document.getElementById("statBestStreak").innerText = best;
 }
-
-
-document.getElementById("daysCompletedCard").onclick = () => {
-  document.getElementById("globalCalendarSection")
-    .classList.toggle("hidden");
-};
-
 
 async function loadAll() {
   await loadGoals();
@@ -252,26 +244,6 @@ async function loadAll() {
   await loadStats();
 }
 
-
-const profileName = document.querySelector(".profile-name");
-const profileDropdown = document.querySelector(".profile-dropdown");
-
-if (profileName) {
-  profileName.addEventListener("click", () => {
-    profileDropdown.classList.toggle("hidden");
-  });
-}
-
-
-document.addEventListener("click", (e) => {
-  if (!e.target.closest(".profile-menu")) {
-    profileDropdown?.classList.add("hidden");
-  }
+window.addEventListener("load", async () => {
+  await loadAll();
 });
-
-const username = localStorage.getItem("username") || "Friend";
-const welcomeEl = document.getElementById("welcomeText");
-if (welcomeEl) {
-  welcomeEl.innerText = `Welcome back, ${username} 👋`;
-}
-
